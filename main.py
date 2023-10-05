@@ -13,7 +13,7 @@ screen_width = infoObject.current_w
 screen_height = infoObject.current_h
 
 screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
-
+spawn_area = pygame.Rect(screen_width * 0.2, 0, screen_width * 0.6, screen_height)  
 
 # Colors
 black = (0, 0, 0)
@@ -21,7 +21,7 @@ white = (255, 255, 255)
 
 # Player
 player_size = 50
-player_speed = 10
+player_speed = screen_width / 250
 player_img = pygame.image.load("player.png")
 player_rect = player_img.get_rect()
 player_rect.topleft = [screen_width / 2, screen_height - 2 * player_size]
@@ -40,7 +40,7 @@ font = pygame.font.Font(None, 36)
 
 # Health
 heart_img = pygame.image.load("heart.png")
-heart_rects = [heart_img.get_rect(topleft=(10 + i * 30, 10)) for i in range(3)]
+heart_rects = [heart_img.get_rect(topleft=(410 + i * 30, 50)) for i in range(3)]
 lives = 3
 
 # Score
@@ -55,6 +55,21 @@ input_font = pygame.font.Font(None, 32)
 title_font = pygame.font.Font(None, 70)
 menu_font = pygame.font.Font(None, 50)
 
+# social links
+social_media_links = [
+    {"label": "Twitter", "url": "@shuttle_dev", "image":"./twitter_qr.png"},
+    {"label": "GitHub", "url": "github.com/shuttle-hq/shuttle", "image": "./github_qr.png"},
+    {"label": "Leaderboard", "url": None, "image": "./leaderboard_qr.png"},
+    # Add more social media links as needed
+]
+
+# side screen
+sidebar_size = screen_width / 5 
+side_screen = pygame.Surface((sidebar_size, screen_height))
+sidebar_left_x_pos = 0;
+sidebar_right_x_pos = screen_width - (sidebar_size);
+ 
+side_screen.fill((25, 25, 25))
 # Function to render glitchy text with different colors and offsets
 def render_glitchy_text(text, font, x, y, colors):
     for color, offset in colors:
@@ -88,7 +103,7 @@ def drop_enemies(enemy_list):
     rust_items = ["unwrap()", "panic!", "mut", "oddbjorn"]
     spawn_rate = 0.03 - score * 0.000005  # Faster spawn rate as score increases
     if len(enemy_list) < 5 and random.random() < spawn_rate:  # Decrease spawn rate as score increases
-        x_pos = random.randint(0, screen_width - enemy_size)
+        x_pos = random.randint(spawn_area.left, spawn_area.right - enemy_size)
         y_pos = 0
         direction = random.randint(1, 3)
         item = random.choice(rust_items)
@@ -110,13 +125,23 @@ def update_enemy_positions(enemy_list, score):
     if score < 50:
         enemy_speed = 0.5
     elif score < 100:
-        enemy_speed = 1
+        enemy_speed = 0.7
     elif score < 150:
+        enemy_speed = 1
+    elif score < 200:
+        enemy_speed = 1.25
+    elif score < 300:
         enemy_speed = 1.5
     else:
         enemy_speed = 2
 
+
     for idx, enemy in enumerate(enemy_list):
+        if enemy[1][0] >= sidebar_right_x_pos - enemy[3].width:
+            enemy[2] = 2 
+        elif enemy[1][0] <= sidebar_size:
+            enemy[2] = 1 
+
         if enemy[1][1] >= 0 and enemy[1][1] < screen_height:
             enemy[1][1] += enemy_speed
             if enemy[2] == 1:
@@ -182,8 +207,50 @@ def main_menu():
                 else:
                     active = False
                 color = color_active if active else color_inactive
+	
+        y_offset_left = 50  # Adjust the starting Y-coordinate for links	
+        font = pygame.font.Font(None, 36)  # You can adjust the font size
+        text_color = white  # Black text color
 
         screen.fill(black)
+        screen.blit(side_screen, (0, 0)) 
+
+        for link in social_media_links:
+            text = font.render(link["label"], True, text_color)
+            screen.blit(text, (10, y_offset_left))
+            
+            if link["url"] is not None:
+                text = font.render(link["url"], True, text_color)
+                screen.blit(text, (10, y_offset_left + 30))
+                qr = pygame.image.load(link["image"])
+                qr = pygame.transform.scale(qr, (225, 225))
+                screen.blit(qr, (50, y_offset_left + 60))
+                y_offset_left += 330  # Adjust the vertical spacing between links
+            else:
+                qr = pygame.image.load(link["image"])
+                qr = pygame.transform.scale(qr, (225, 225))
+                screen.blit(qr, (50, y_offset_left + 30)) 
+                y_offset_left += 300  # Adjust the vertical spacing between links
+	
+        y_offset_right = 50 
+        screen.blit(side_screen, (sidebar_right_x_pos, 0))
+        for link in social_media_links:
+            text = font.render(link["label"], True, text_color)
+            screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right))
+            
+            if link["url"] is not None:
+                text = font.render(link["url"], True, text_color)
+                screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right + 30))
+                qr = pygame.image.load(link["image"])
+                qr = pygame.transform.scale(qr, (225, 225))
+                screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 60))
+                y_offset_right += 330  # Adjust the vertical spacing between links
+            else:
+                qr = pygame.image.load(link["image"])
+                qr = pygame.transform.scale(qr, (225, 225))
+                screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 30)) 
+                y_offset_right += 300  # Adjust the vertical spacing between links
+	
         title_text = title_font.render("Shuttle Invaders", True, white)
         screen.blit(title_text, (screen_width // 2 - title_text.get_width() // 2, 50))
         menu_text = menu_font.render("Enter your name and press Enter to Start Game", True, white)
@@ -204,7 +271,6 @@ def draw_game_over_popup():
 
 while True:
     main_menu()
-
     # Game Loop
     game_over = False
 
@@ -214,20 +280,15 @@ while True:
                 pygame.quit()
                 sys.exit()
 
-        pygame.display.update()
         clock.tick(120)
 
-        score_text = font_score.render(f"Score: {score}", True, white)
-        score_x = screen_width // 2 - score_text.get_rect().width // 2
-        screen.blit(score_text, (score_x, 10))
-
-        pygame.display.update()
-
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] and player_rect.left > 0:
+        if keys[pygame.K_LEFT] and player_rect.left > 400:
             player_rect.x -= player_speed
         if keys[pygame.K_RIGHT] and player_rect.right < screen_width:
             player_rect.x += player_speed
+        if keys[pygame.K_RIGHT] and player_rect.right > screen_width - 400:
+            player_rect.x -= player_speed
         if keys[pygame.K_UP] and player_rect.top > 0:
             player_rect.y -= player_speed
         if keys[pygame.K_DOWN] and player_rect.bottom < screen_height:
@@ -236,13 +297,53 @@ while True:
             bullet_active = True
             bullet_rect.midtop = player_rect.midtop
             bullet_sound.play()
-        if player_rect.left > screen_width:
+        if player_rect.left > screen_width - 400:
             player_rect.right = 0
         elif player_rect.right < 0:
-            player_rect.left = screen_width
+            player_rect.left = screen_width 
 
+        text_color = white  # Black text color
         screen.fill(black)
 
+        screen.blit(side_screen, (0, 0)) 
+        y_offset_left = 50
+
+        for link in social_media_links:
+            text = font.render(link["label"], True, text_color)
+            screen.blit(text, (10, y_offset_left))
+            
+            if link["url"] is not None:
+                text = font.render(link["url"], True, text_color)
+                screen.blit(text, (10, y_offset_left + 30))
+                qr = pygame.image.load(link["image"])
+                qr = pygame.transform.scale(qr, (225, 225))
+                screen.blit(qr, (50, y_offset_left + 60))
+                y_offset_left += 330  # Adjust the vertical spacing between links
+            else:
+                qr = pygame.image.load(link["image"])
+                qr = pygame.transform.scale(qr, (225, 225))
+                screen.blit(qr, (50, y_offset_left + 30)) 
+                y_offset_left += 300  # Adjust the vertical spacing between links
+	
+        y_offset_right = 50 
+        screen.blit(side_screen, (sidebar_right_x_pos, 0))
+        for link in social_media_links:
+            text = font.render(link["label"], True, text_color)
+            screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right))
+            
+            if link["url"] is not None:
+                text = font.render(link["url"], True, text_color)
+                screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right + 30))
+                qr = pygame.image.load(link["image"])
+                qr = pygame.transform.scale(qr, (225, 225))
+                screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 60))
+                y_offset_right += 330  # Adjust the vertical spacing between links
+            else:
+                qr = pygame.image.load(link["image"])
+                qr = pygame.transform.scale(qr, (225, 225))
+                screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 30)) 
+                y_offset_right += 300  # Adjust the vertical spacing between links
+	
         if bullet_active:
             pygame.draw.rect(screen, white, bullet_rect)
             bullet_rect.y -= bullet_speed
@@ -254,7 +355,7 @@ while True:
                 score += 10
             elif bullet_rect.y < 0:
                 bullet_active = False
-
+        
         draw_particles()
 
         drop_enemies(enemy_list)
@@ -264,6 +365,8 @@ while True:
                 game_over = True
                 gameover_sound.play()
 
+        if player_rect.colliderect(spawn_area):
+                player_velocity = (0, 0)
         if collision_check(enemy_list, player_rect):
             lives -= 1
             for enemy in enemy_list[:]:
@@ -282,9 +385,12 @@ while True:
 
         for i, heart_rect in enumerate(heart_rects[:lives]):
             screen.blit(heart_img, heart_rect)
-
+        
         score_text = font_score.render(f"Score: {score}", True, white)
-        screen.blit(score_text, (screen_width - 150, 10))
+
+        score_x = screen_width // 2 - score_text.get_rect().width // 2
+
+        screen.blit(score_text, (score_x, 50))
 
         pygame.display.update()
 
@@ -297,6 +403,7 @@ while True:
             "score": score
         }
         response = requests.post("https://shuttlegame-leaderboard.shuttleapp.rs/submit", json=data)
+
         if response.status_code == 200:
             print("Score successfully submitted to the leaderboard.")
         else:
