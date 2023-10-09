@@ -20,7 +20,7 @@ black = (0, 0, 0)
 white = (255, 255, 255)
 
 # Player
-player_size = 50
+player_size = screen_width / 40
 player_speed = screen_width / 250
 player_img = pygame.image.load("player.png")
 player_rect = player_img.get_rect()
@@ -56,10 +56,16 @@ title_font = pygame.font.Font(None, 70)
 menu_font = pygame.font.Font(None, 50)
 
 # social links
-social_media_links = [
+social_media_links_left = [
     {"label": "Twitter", "url": "@shuttle_dev", "image":"./twitter_qr.png"},
     {"label": "GitHub", "url": "github.com/shuttle-hq/shuttle", "image": "./github_qr.png"},
+    # Add more social media links as needed
+]
+
+# social links
+social_media_links_right = [
     {"label": "Leaderboard", "url": None, "image": "./leaderboard_qr.png"},
+    {"label": "Website", "url": "https://www.shuttle.rs", "image": "./website_qr.png"},
     # Add more social media links as needed
 ]
 
@@ -100,7 +106,7 @@ def draw_particles():
 
 def drop_enemies(enemy_list):
     delay = random.random()
-    rust_items = ["unwrap()", "panic!", "mut", "oddbjorn"]
+    rust_items = ["unwrap()", "panic!", "mutable", ".YAML", "Rc<RefCell<T>>", "aws_console", "terraform", "dockerfile", "azure", "terraform", "kubernetes"]
     spawn_rate = 0.03 - score * 0.000005  # Faster spawn rate as score increases
     if len(enemy_list) < 5 and random.random() < spawn_rate:  # Decrease spawn rate as score increases
         x_pos = random.randint(spawn_area.left, spawn_area.right - enemy_size)
@@ -172,6 +178,50 @@ def bullet_enemy_collision(bullet_rect, enemy_list):
             return enemy
     return None
 
+def draw_side_screens():
+    screen.blit(side_screen, (0, 0)) 
+
+    text_color = white 
+
+    y_offset_left = screen_height * 0.1
+
+    for link in social_media_links_left:
+        text = font.render(link["label"], True, text_color)
+        screen.blit(text, (10, y_offset_left))
+        
+        if link["url"] is not None:
+            text = font.render(link["url"], True, text_color)
+            screen.blit(text, (10, y_offset_left + 30))
+            qr = pygame.image.load(link["image"])
+            qr = pygame.transform.scale(qr, (sidebar_size * 0.8, sidebar_size * 0.7))
+            screen.blit(qr, (50, y_offset_left + 60))
+            y_offset_left += (screen_height * 0.4)  # Adjust the vertical spacing between links
+        else:
+            qr = pygame.image.load(link["image"])
+            qr = pygame.transform.scale(qr, (sidebar_size * 0.8, sidebar_size * 0.7))
+            screen.blit(qr, (50, y_offset_left + 30)) 
+            y_offset_left += (screen_height * 0.4)  # Adjust the vertical spacing between links
+
+    y_offset_right = screen_height * 0.1 
+    screen.blit(side_screen, (sidebar_right_x_pos, 0))
+    for link in social_media_links_right:
+        text = font.render(link["label"], True, text_color)
+        screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right))
+        
+        if link["url"] is not None:
+            text = font.render(link["url"], True, text_color)
+            screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right + 30))
+            qr = pygame.image.load(link["image"])
+            qr = pygame.transform.scale(qr, (sidebar_size * 0.8, sidebar_size * 0.7))
+            screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 60))
+            y_offset_right += (screen_height * 0.4)  # Adjust the vertical spacing between links
+        else:
+            qr = pygame.image.load(link["image"])
+            qr = pygame.transform.scale(qr, (sidebar_size * 0.8, sidebar_size * 0.7))
+            screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 30)) 
+            y_offset_right += (screen_height * 0.4)  # Adjust the vertical spacing between links
+
+	
 def main_menu():
     global player_name, score, lives, enemy_list, bullet_active, bullet_rect, player_rect
     player_name = ''
@@ -213,44 +263,9 @@ def main_menu():
         text_color = white  # Black text color
 
         screen.fill(black)
-        screen.blit(side_screen, (0, 0)) 
+	
+        draw_side_screens()
 
-        for link in social_media_links:
-            text = font.render(link["label"], True, text_color)
-            screen.blit(text, (10, y_offset_left))
-            
-            if link["url"] is not None:
-                text = font.render(link["url"], True, text_color)
-                screen.blit(text, (10, y_offset_left + 30))
-                qr = pygame.image.load(link["image"])
-                qr = pygame.transform.scale(qr, (225, 225))
-                screen.blit(qr, (50, y_offset_left + 60))
-                y_offset_left += 330  # Adjust the vertical spacing between links
-            else:
-                qr = pygame.image.load(link["image"])
-                qr = pygame.transform.scale(qr, (225, 225))
-                screen.blit(qr, (50, y_offset_left + 30)) 
-                y_offset_left += 300  # Adjust the vertical spacing between links
-	
-        y_offset_right = 50 
-        screen.blit(side_screen, (sidebar_right_x_pos, 0))
-        for link in social_media_links:
-            text = font.render(link["label"], True, text_color)
-            screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right))
-            
-            if link["url"] is not None:
-                text = font.render(link["url"], True, text_color)
-                screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right + 30))
-                qr = pygame.image.load(link["image"])
-                qr = pygame.transform.scale(qr, (225, 225))
-                screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 60))
-                y_offset_right += 330  # Adjust the vertical spacing between links
-            else:
-                qr = pygame.image.load(link["image"])
-                qr = pygame.transform.scale(qr, (225, 225))
-                screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 30)) 
-                y_offset_right += 300  # Adjust the vertical spacing between links
-	
         title_text = title_font.render("Shuttle Invaders", True, white)
         screen.blit(title_text, (screen_width // 2 - title_text.get_width() // 2, 50))
         menu_text = menu_font.render("Enter your name and press Enter to Start Game", True, white)
@@ -305,44 +320,7 @@ while True:
         text_color = white  # Black text color
         screen.fill(black)
 
-        screen.blit(side_screen, (0, 0)) 
-        y_offset_left = 50
-
-        for link in social_media_links:
-            text = font.render(link["label"], True, text_color)
-            screen.blit(text, (10, y_offset_left))
-            
-            if link["url"] is not None:
-                text = font.render(link["url"], True, text_color)
-                screen.blit(text, (10, y_offset_left + 30))
-                qr = pygame.image.load(link["image"])
-                qr = pygame.transform.scale(qr, (225, 225))
-                screen.blit(qr, (50, y_offset_left + 60))
-                y_offset_left += 330  # Adjust the vertical spacing between links
-            else:
-                qr = pygame.image.load(link["image"])
-                qr = pygame.transform.scale(qr, (225, 225))
-                screen.blit(qr, (50, y_offset_left + 30)) 
-                y_offset_left += 300  # Adjust the vertical spacing between links
-	
-        y_offset_right = 50 
-        screen.blit(side_screen, (sidebar_right_x_pos, 0))
-        for link in social_media_links:
-            text = font.render(link["label"], True, text_color)
-            screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right))
-            
-            if link["url"] is not None:
-                text = font.render(link["url"], True, text_color)
-                screen.blit(text, (sidebar_right_x_pos + 10, y_offset_right + 30))
-                qr = pygame.image.load(link["image"])
-                qr = pygame.transform.scale(qr, (225, 225))
-                screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 60))
-                y_offset_right += 330  # Adjust the vertical spacing between links
-            else:
-                qr = pygame.image.load(link["image"])
-                qr = pygame.transform.scale(qr, (225, 225))
-                screen.blit(qr, (sidebar_right_x_pos + 50, y_offset_right + 30)) 
-                y_offset_right += 300  # Adjust the vertical spacing between links
+        draw_side_screens()
 	
         if bullet_active:
             pygame.draw.rect(screen, white, bullet_rect)
@@ -408,3 +386,4 @@ while True:
             print("Score successfully submitted to the leaderboard.")
         else:
             print("There was a problem submitting the score to the leaderboard.")
+
